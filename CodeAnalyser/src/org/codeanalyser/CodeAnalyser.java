@@ -126,6 +126,4 @@ public class CodeAnalyser {
 		sb.append(");");
 		return sb.toString();
 	}
-	
-	
 }
