@@ -1,6 +1,7 @@
 package org.codeanalyser.methodanalyser;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,8 +54,10 @@ public class MethodAnalyser implements IAnalyser {
 	public ArrayList<Item> getItems() {
 		return methods;
 	}
-	
-	
-	
-	
+
+	@Override
+	public void setItems(Collection<? extends Item> items) {}
+
+	@Override
+	public void setNonCommandItems(Collection<? extends Item> items) {}
 }
