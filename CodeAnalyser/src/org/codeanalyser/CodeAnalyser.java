@@ -6,6 +6,7 @@ import org.codeanalyser.commandanalyser.CommandAnalyser;
 import org.codeanalyser.commandanalyser.NonCommandAnalyser;
 import org.codeanalyser.methodanalyser.MethodAnalyser;
 import org.codeanalyser.model.Command;
+import org.codeanalyser.model.EmptyListException;
 
 /**
  * Main class for code analysis. Adds special command to every command in source code
@@ -36,8 +37,15 @@ public class CodeAnalyser {
 		this.originalSourceCode = sourceCode;
 	}
 	
+	/**
+	 * Analysing the code which includes computing indices 
+	 * for all commands in the source code.
+	 */
 	public void analyse() {
+		// Find '{', '}' or ';' in strings 
+		nonCommandAnalyser.computeIndices();
 		// Compute method indices
+		methodAnalyser.setNonCommandItems(nonCommandAnalyser.getItems());
 		methodAnalyser.computeIndices();
 		// Find '{', '}' or ';' in strings 
 		nonCommandAnalyser.computeIndices();
@@ -58,9 +66,9 @@ public class CodeAnalyser {
 		return this.commandAnalyser;
 	}
 	
-	public String editCode() throws Exception {
+	public String editCode() throws EmptyListException {
 		if (!this.analysed) {
-			throw new Exception("Not analysed");
+			throw new EmptyListException("Not analysed");
 		}
 		
 		if (commandAnalyser.getItems().isEmpty()) {
@@ -73,18 +81,13 @@ public class CodeAnalyser {
 		StringBuilder sb = new StringBuilder(originalSourceCode);
 		
 		for (int i = commandSize; i >= 0; i--) {
-			Command command = null;
-			
-			try {
-				command = commands.get(i);
-			}
-			catch (IndexOutOfBoundsException e) {}
+			Command command = getCommand(commands, i);
 			
 			if (command == null) {
 				continue;
 			}
 			
-			int commandStart = command.getStart() > 0 ? command.getStart() - 1 : 0;
+			int commandStart = computeCommandStart(command);
 			
 			for (int j = commandStart; j >= 0; j--) {
 				
@@ -94,27 +97,56 @@ public class CodeAnalyser {
 					final int current = j;
 					int index = j;
 					
-					boolean nonCommand = //false;
-							this.nonCommandAnalyser
-								.getItems()
-								.stream()
-								.anyMatch(n -> current >= n.getStart() && current <= n.getEnd());
+					boolean nonCommand = isNonCommand(current);
 					
-					if (nonCommand) {
-						continue;
+					if (!nonCommand) {
+						index = stepBack(index, sb);
+						sb.insert(index, makeAnalyseCommand(i));
+						break;
 					}
-					
-					if (index < sb.toString().length()) {
-						index += 1;
-					}
-					
-					sb.insert(index, makeAnalyseCommand(i));
-					break;
 				}
 			}
 		}
 		
 		return sb.toString();
+	}
+	
+	// ========== PRIVATE METHODS ============
+	
+	private int computeCommandStart(Command command) {
+		return command.getStart() > 0 
+				? command.getStart() - 1 
+				: 0;
+	}
+	
+	private int stepBack(int index, StringBuilder sb) {
+		int newIndex = index;
+		
+		if (index < sb.toString().length()) {
+			newIndex = index + 1;
+		}
+		
+		return newIndex;
+	}
+	
+	private boolean isNonCommand(int current) {
+		return this.nonCommandAnalyser
+				.getItems()
+				.stream()
+				.anyMatch(n -> current >= n.getStart() && current <= n.getEnd());
+	}
+	
+	private Command getCommand(ArrayList<Command> commands, int index) {
+		Command command;
+		
+		try {
+			command = commands.get(index);
+		}
+		catch (IndexOutOfBoundsException e) {
+			command = null;
+		}
+		
+		return command;
 	}
 	
 	private String makeAnalyseCommand(int i) {

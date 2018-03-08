@@ -18,7 +18,7 @@ public class CommandAnalyser implements IAnalyser {
 	
 	public CommandAnalyser(String source) {
 		this.source = source;
-		this.commands = new ArrayList<Command>();
+		this.commands = new ArrayList<>();
 	}
 	
 	@Override
@@ -37,11 +37,14 @@ public class CommandAnalyser implements IAnalyser {
 			final int startIndex = matcher.start();
 			
 			Command command = new Command(commandHeader, startIndex, 0); 
+			boolean nonCommand = false;
 			
-			boolean nonCommand = //false;
-					this.nonCommands
+			if (nonCommands != null) {
+				nonCommand = this.nonCommands
 						.stream()
 						.anyMatch(n -> startIndex >= n.getStart() && startIndex <= n.getEnd());
+			}
+			 
 			
 			if (nonCommand) {
 				continue;

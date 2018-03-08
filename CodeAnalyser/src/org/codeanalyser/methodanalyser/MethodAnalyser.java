@@ -2,10 +2,12 @@ package org.codeanalyser.methodanalyser;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codeanalyser.interfaces.IAnalyser;
+import org.codeanalyser.model.Command;
 import org.codeanalyser.model.Item;
 
 /**
@@ -16,14 +18,16 @@ import org.codeanalyser.model.Item;
 public class MethodAnalyser implements IAnalyser {
 	private final String source;
 	private final ArrayList<Item> methods;
-	private static final String METHOD_EXP = "(public|private|protected)(.*)?(\\((.*)\\))( *\\{)";
-	private final MethodEndComputer computer;
+	private static final String METHOD_EXP = "(public|private|protected)(.*)?(\\((.*)\\))([^;])( *\\{)?";
+	private ArrayList<Command> nonCommands;
+	private boolean nonCommandsSet;
 	
 	public 
 	MethodAnalyser(String source) {
 		this.source = source;
-		this.methods = new ArrayList<Item>();
-		this.computer = new MethodEndComputer(source);
+		this.methods = new ArrayList<>();
+		this.nonCommandsSet = false;
+		
 	}
 	
 	/**
@@ -38,10 +42,13 @@ public class MethodAnalyser implements IAnalyser {
 		final Pattern pattern = Pattern.compile(METHOD_EXP);
 		final Matcher matcher = pattern.matcher(this.source);
 
+		MethodEndComputer computer = new MethodEndComputer(source, nonCommands, nonCommandsSet);
+		
 		// Iterate through the groups
 		while (matcher.find()) {
 			String methodHeader = matcher.group(0);
 			int startIndex = matcher.start();
+			
 			int endIndex = computer.findEndIndex(startIndex);
 			
 			Item method = new Item(methodHeader, startIndex, endIndex); 
@@ -51,13 +58,19 @@ public class MethodAnalyser implements IAnalyser {
 	}
 
 	@Override
-	public ArrayList<Item> getItems() {
+	public List<Item> getItems() {
 		return methods;
 	}
 
 	@Override
-	public void setItems(Collection<? extends Item> items) {}
+	public void setItems(Collection<? extends Item> items) {
+		throw new UnsupportedOperationException("Not needed");
+	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setNonCommandItems(Collection<? extends Item> items) {}
+	public void setNonCommandItems(Collection<? extends Item> items) {
+		this.nonCommands = (ArrayList<Command>) items;
+		this.nonCommandsSet  = true;
+	}
 }

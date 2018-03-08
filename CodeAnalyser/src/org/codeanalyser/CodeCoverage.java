@@ -11,8 +11,8 @@ public class CodeCoverage implements ICodeCoverage {
 	private final int totalCommands;
 	
 	public CodeCoverage(int totalCommands) {
-		this.stackTrace = new ArrayList<Integer>();
-		this.calledCommands = new HashSet<Integer>();
+		this.stackTrace = new ArrayList<>();
+		this.calledCommands = new HashSet<>();
 		this.totalCommands = totalCommands;
 	}
 	
@@ -32,9 +32,7 @@ public class CodeCoverage implements ICodeCoverage {
 		double calledCommandsSize = (double) this.calledCommands.size();
 		double functionalRowsSize = (double) this.totalCommands;
 		
-		double coverage = (calledCommandsSize / functionalRowsSize) * 100;
-		
-		return coverage;
+		return (calledCommandsSize / functionalRowsSize) * 100;
 	}
 	
 	public void printCalledCommands() {
